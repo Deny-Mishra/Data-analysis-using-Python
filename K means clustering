@@ -1,0 +1,169 @@
+import pandas as pd
+import numpy as np 
+
+df = pd.read_csv(r'C:\Deny\Machine learning fundamentals\clustering KMeaans clustering data\project 1\players_22.csv')
+df
+df.head
+df.columns
+
+features = ["overall", "potential", "value_eur", "wage_eur", "age"]
+features
+
+players = df.dropna(subset=features)
+features
+
+data = players[features].copy()
+data
+
+#step 1--- scale the data----There are several ways--- I am using formula to convert into a scale of 0 to 10 like 
+                    #Formula --------index = {(original data - min) - (max - min)}*9 + 1 #
+                    # multiplying with 9 will rescale everything from 0 to 9#
+                    #adding 1 at the last will scale everything from 0 to 10#
+
+data = (data- data.min())/(data.max()-data.min())*9 + 1
+data.describe() #check the values they are all scaled from 0 to 10#
+
+#step 2-- intialize random centroid# 
+#we can use our own random centroid values for each columns in the data 
+#Or we can also give a function named .apply to find a random centroid for each column and machine will find values for use
+
+#using .apply function---- we get single centroid for each columns##
+centroid = data.apply(lambda x: float(x.sample()))
+
+#cehcking random centroid machine has chosen for the given data set#
+centroid
+
+#If we want multiple centroid we have to use a loop function in the above formula#
+def random_centroids(data, k):
+    centroids = []
+    for i in range(k):
+        centroid = data.apply(lambda x: float(x.sample()))
+        centroids.append(centroid)
+    return pd.concat(centroids, axis=1)
+
+
+centroids = random_centroids(data,5) #here k = 5 i.e. number of clusters is declared 5 we can give any numbers of clusters#
+
+centroids #see below--- each column is centroid and each row is a feature#
+#Also If you change the value of K from 5 to 3 we shall see different values#
+
+#step 3 -- Label each data point to find how far is each data point from the centroid#
+#this is going to determine the distance between each data point from our data set and cluster center we got above.
+
+
+# we square and then take square root of using basic geometric distance formula#
+#then we apply to all our centroids
+#centroid.apply (( np.sqrt(((data-centroids.iloc[:,0]))**2.sum(axis=1)))#using lambda this function will use for each centroids#
+distances = centroids.apply(lambda x: np.sqrt(((data - x) ** 2).sum(axis=1)))
+distances
+#this will give us distance of each data point from each column center#
+
+#fiding minimum index value for each row#
+distances.idxmin(axis=1)
+
+
+#understanding the above values#
+#for instance first data point i.e. 0 which is of Leonnel Messi--- go along the row values and see that the lowest value of observation is at coloumn 0 
+#for observation 1--- > the lowest value along the columns is 10.800 so it closes to center of column 0.
+#for observation2 ---- > it is closes to center of column 3.
+
+#converting distances into function#
+def get_labels(data, centroids):
+    distances = centroids.apply(lambda x: np.sqrt(((data - x) ** 2).sum(axis=1)))
+    return distances.idxmin(axis=1)
+
+
+labels = get_labels(data,centroids)
+labels
+
+
+#finding how many players are in each columns#
+labels.value_counts()
+#IN cluster1 there are 8673 players
+#In cluster 2 there are 1120 players
+#In cluster 3 there are 5970 players
+
+
+#Hence, we have assigned clusters to each players based on random centroid#
+
+
+#step 4--- update centroid# We using geometric of each cluster to find new centroids for each column
+
+#formula for geometric mean where exp--is exponential of power of (np.log(x).mean())
+#we shall apply this geometric mean formula to each of the data group 
+#with this we shall create one group with cluster centroid and multiplyig with new centroid updated by taking geomtric mean#
+data.groupby(labels).apply(lambda x: np.exp(np.log(x).mean()))
+#for instance the value 6.127292 is the geometric values of all the players assigned cluster 0 with feature overall.
+#similarly the value 3.682101 is the geometric values of all the players assigned cluster 1 with feature overall.
+#If you see first thing----in the updated centroid values we found above columns 0,1,2,3,4 are at column and features are at row
+#hence we have transpose these values 
+
+data.groupby(labels).apply(lambda x: np.exp(np.log(x).mean())).T #here .T is for transpose
+
+#using the entire above codes from line 97 and 98 to get new complete function
+def new_centroids(data, labels, k):
+    centroids = data.groupby(labels).apply(lambda x: np.exp(np.log(x).mean())).T
+    return centroids
+
+
+from sklearn.decomposition import PCA
+import matplotlib.pyplot as plt
+from IPython.display import clear_output #this will help to clear the output every time we plot the graph in Jypter notebook#
+
+
+
+#visualizing our data--- > for this we using PCA- Principal COmponent Analysis# 
+#Why PCA#It is because we have five features for each players--- > so presenting 5 dimensional data in graph is not possible#
+#So for this PCA will convert all 5 features of our data set into 2 dimensional data set and visualize them#
+def plot_clusters(data, labels, centroids, iteration):
+    pca = PCA(n_components=2) #PCA is used where n_components = 2 which indicates it will convert data of 5 features into 2 dimensions#
+    data_2d = pca.fit_transform(data) #fit.transform will transform data into 2 dimensions#
+    centroids_2d = pca.transform(centroids.T)
+    clear_output(wait=True)
+    plt.title(f'Iteration {iteration}')
+    plt.scatter(x=data_2d[:,0], y=data_2d[:,1], c=labels) #plotting clusters#
+    plt.scatter(x=centroids_2d[:,0], y=centroids_2d[:,1]) #plotting centroid on top of the clusters#
+    plt.show()
+
+centroids
+
+max_iterations = 100
+k = 3#this is also the number of clusters we want for instance 3 here.
+
+centroids = random_centroids(data, k)
+old_centroids = pd.DataFrame()
+iteration = 1
+
+while iteration < max_iterations and not centroids.equals(old_centroids):
+    old_centroids = centroids
+    
+    labels = get_labels(data, centroids)
+    centroids = new_centroids(data, labels, centroid_count)
+    plot_clusters(data, labels, centroids, iteration)
+    iteration += 1
+
+
+#we can see which players is in which labels or clusters#
+players[labels ==3][["short_name"] + features] #keep changing the values of labels = 0 to lables ==1 and labels ==2 and so on to see the details of players in each clusters#
+
+#in cluster 0 ---- > palyers with lower age (i.e. 2.21756dd1 --- lower than everyone) are clustered who have high potential (6.1594-- higher than other players in other clusters)#
+#in cluster 1 ----- > players with higher potential but lower value and wage
+#in cluster 3 ----- > overall is highest and age is hihger too for instance L.Messi, R.Lewandkowski, Cristiano Ronaldo, etc.
+
+#using Sciki learn Method for K Means clustering to validate the output from manually buidling and using sciki learn algo#
+
+from sklearn.cluster import KMeans
+kmeans = KMeans(3)
+kmeans.fit(data)
+
+pd.DataFrame(kmeans.cluster_centers_, columns=features).T
+
+centroids
+
+#comparing the output using skicit learn i.e. sklearn with the output from centroid which is line 139
+#values may be different but the essence is same
+#for instance--->
+#cluster 1 consist of players whose age is highest who have already achieved more than potential
+#cluster 0 consist of players 
+
+
