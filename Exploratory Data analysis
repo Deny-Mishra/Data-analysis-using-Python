@@ -1,0 +1,169 @@
+
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+
+data_path = 'C:/Deny/Python/coaster_db.csv'
+
+df=pd.read_csv(data_path)
+print(df)
+
+df.head(5)
+
+#Display all the columns#
+df.columns
+#Displaying data types#
+df.dtypes
+
+#Displaying only one specific column of a given data set#
+df['height_ft']
+
+#if you want to drop only one variable from a dataset#
+df.drop(['Opening date'],axis = 1)
+
+#Subsetting the set of columns#
+#Filtering many columns out of many we can use following way#
+#copying all the names of the columns and only filtering numeric columns for further analysis#
+dfa = df[['coaster_name', 
+   #'Length', 'Speed', 
+          'Location', 
+          #'Status', 'Opening date',
+       #'Type', 
+   'Manufacturer', 
+   #'Height restriction', 'Model', 
+    'Height',
+    # 'Inversions', 'Lift/launch system', 'Cost', 'Trains', 'Park section',
+    #'Duration', 'Capacity', 'G-force', 'Designer', 'Max vertical angle',
+    #'Drop', 'Soft opening date', 'Fast Lane available', 'Replaced',
+    #'Track layout', 'Fastrack available', 'Soft opening date.1',
+    #'Closing date', 
+   'Opened', 
+   #'Replaced by', 'Website',
+    #'Flash Pass Available', 'Must transfer from wheelchair', 'Theme',
+       #'Single rider line available', 'Restraint Style',
+       #'Flash Pass available', 'Acceleration', 'Restraints', Name',
+   'year_introduced', 'latitude', 'longitude', 'Type_Main','opening_date_clean', 
+   #'speed1', 'speed2', 'speed1_value', 'speed1_unit',
+       'speed_mph', 
+   #'height_value', 'height_unit', 
+        'height_ft',
+       'Inversions_clean', 'Gforce_clean']].copy()
+
+dfa
+
+#Descriptive statistics#
+dfa.describe
+dfa.dtypes
+
+#if you see above opening_date_clean is object data type which we don't want---- we want it to be date variable so we want to convert#
+#we using the function pd.to_datetime#   -------- > #if we want convert string to numeric we can use ---- > pd.to_numeric function#
+
+#chaning the data type#
+dfa['opening_date_clean']=pd.to_datetime(dfa['opening_date_clean'])
+
+dfa.dtypes #now it has changed#
+
+#renaming columns#
+dfa.columns #checking the columns name#
+#there are no much things to do# so only I am going to rename few columns with first letter capital and no spaces between their names#
+
+dfa = dfa.rename(columns ={ 
+          'coaster_name' : 'Coaster_Name', 
+           'year_introduced' : 'Year_Introduced', 
+           'latitude': 'Latitude',
+           'longitude':'Longitude', 
+           'opening_date_clean' : 'Opening_Date', 
+           'speed_mph' : 'Speed_Mph',
+           'Inversions_clean' : 'Inversions',
+           'Gforce_clean' : 'Gforce'})
+
+dfa #checking the first and second name which we have just changed into capital letters and no space between names of each columns#
+
+#checkiing the value counts of each variable or column#
+dfa['Year_Introduced'].value_counts()
+#for instance in the year 1999 there were 49 roaller coster introduced#
+#In the year 2000 there are 47 roaller coaster introduced#
+
+#plotting the above facts in bar char#
+dfa['Year_Introduced'].value_counts().plot(kind='bar') #If you plot all the years in the diagram, it will look messy#
+
+
+ax = dfa['Year_Introduced'].value_counts()\
+.head(10)\
+.plot(kind='bar', title = 'Top Years Roaller Coaster Introduced') #using 'barh' instead of 'bar' will give horizontal bar diagram#
+# using .head(10) will only plot top 10 years when roaller coaster were introduced#
+ax.set_xlabel('Year Introduced')
+ax.set_ylabel('Count')
+
+#Checking the Distribution of Columns#
+hist = dfa['Speed_Mph'].plot(kind='hist', bins = 40, title = 'Coaster Speed(MPH)') 
+#without bins only limited data will be displayed so using bins function we can see more clear distribution of the data#
+hist.set_xlabel('Speed(MPH)')
+
+
+#Instead of histogram we can also use density plot which will give us more clear abou the data distribution#
+#Using KERNEL DENSITY PLOT#
+hist = dfa['Speed_Mph'].plot(kind='kde',title = 'Coaster Speed(MPH)') 
+hist.set_xlabel('Speed(MPH)')
+
+
+#Features Relationship#
+#How different features are going to related with each other#
+#1. Heatmap Corerlation#
+#2. Scatter plot
+#3. Pairplot
+#4. Group by Comparisions
+
+
+dfa.columns
+
+
+#1 Scatter plot#
+dfa.plot(kind = 'scatter',
+        x = 'Speed_Mph',
+        y = 'height_ft',
+        title = 'Coaster speed vs. Height')
+#In the output this above function will bring matplotlib function by default so to make it look better in output we can use following function#
+plt.show()
+
+sns.scatterplot( #we using sns as seabron function#
+        x = 'Speed_Mph',
+        y = 'height_ft',
+        hue = 'Year_Introduced', #we want to add color of scatter plot based on Year_Introduced variable#
+        data = dfa)
+plt.show()
+
+dfa.columns
+
+
+#comparing multiple features against one another#
+sns.pairplot(dfa,vars=['Year_Introduced','height_ft','Speed_Mph','Inversions','Gforce'], hue = 'Type_Main')
+plt.show
+
+df_corr = dfa[['Year_Introduced','Speed_Mph','height_ft', 'Inversions', 'Gforce']].dropna().corr()
+df_corr
+
+sns.heatmap(df_corr, annot = True)
+
+
+#self questioning and analyzing data
+#1 What are the locations with with fastest roaller coaster( minimum count = 10)?
+#let's see the counts of coaster based on 'Location' column
+dfa['Location'].value_counts()
+
+#seeing below there is also location named"Other" which is truely not a location so we should remove
+
+#removing "other" from location variable# 
+#we aggregating using agg function i.e. we finding mean and count based on location and speed#
+#we fitering only those locatin having more than 10 counts of roaller coaster#
+
+axc = dfa.query('Location != "Other"') \
+    .groupby('Location')['Speed_Mph'] \
+    .agg(['mean', 'count']) \
+    .query('count >= 10') \
+    .sort_values('mean')['mean'] \
+    .plot(kind='barh', figsize=(12, 5), title='Average Coaster Speed by Location')
+
+axc.set_xlabel('Average Coaster Speed')  # Setting the xlabel for the plot
+plt.show() 
