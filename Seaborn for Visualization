@@ -3,14 +3,15 @@ import seaborn as sns
 import numpy as np
 import pandas as pd
 
-#laoding data#
+
+#Impoprting File#
 data_path = 'C:/Deny/Python/beninning/data/HR_dataa.csv'
 dataa=pd.read_csv(data_path)
 
-#viewing dataset#
+#Viewing the file#
 dataa
 
-#selecting columns out of all the columns#
+#Selecting only few columns out of all#
 dat = dataa[[ 'CF_age_band', 'Department', 'Education_Field', 'Gender',
        'Job_Role', 'Marital_Status', 'Over_Time', 
       'Age', 'Daily_Rate', 'Hourly_Rate', 'Education','Environment_Satisfaction',  
@@ -30,8 +31,7 @@ print(dat.isnull().sum())
 #checking data types#
 dat.dtypes
 
-
-# COUNTPLOT#
+# COUNT PLOT#
 sns.countplot(x="Marital_Status", data=dat)
 plt.title("Count of Occurrences by Marital Status")
 plt.show()
@@ -41,7 +41,16 @@ sns.histplot(dat['Age'], bins=20, kde=True)
 plt.title("Distribution of Age")
 plt.show()
 
-# POINTPLOT#
+#DIS PLOT#
+sns.displot(data=dat, x="Age", hue="Department", multiple="stack", kde=True)
+plt.title("Distribution of Age by Department")
+plt.show()
+
+#DIS PLOT#
+sns.displot(data=dat, x="Age", hue="Department", col="Marital_Status", multiple="stack", kde=True)
+plt.show()
+
+#POINT PLOT#
 sns.pointplot(x="Department", y="Monthly_Income", data=dat, capsize=0.2)
 plt.title("Point Plot of Monthly Income by Department")
 plt.show()
@@ -51,23 +60,49 @@ sns.jointplot(x="Age", y="Monthly_Income", data=dat, kind="scatter")
 plt.suptitle("Joint Plot of Age and Monthly Income")
 plt.show()
 
-#SCATTERPLOT#
-# Assuming 'dat' is your DataFrame
+#JOINT PLOT#
+sns.jointplot(data=dat, x="Total_Working_Years", y="Monthly_Income", hue="Department")
+#plt.title("Joint Plot of Monthly Income vs Total Working Years with Department Hue")#
+plt.show()
+
+#SCATTER PLOT#
 sns.scatterplot(x='Age', y='Monthly_Rate', data=dat)
 plt.title("Scatter Plot of Job Satisfaction vs Monthly Rate")
 plt.show()
 
-#RUG PLOT--- NOTE--- In this situation we have to declare the height of rug plot#
+#RUG PLOT#
 sns.rugplot(dat['Monthly_Income'], height=0.5)
 plt.title("Rug Plot of Monthly Income")
 plt.show()
 
-#RegPLOT -----Regression PLOT#
+#KDE PLOT#
+sns.kdeplot(data=dat, x="Monthly_Income", hue="Gender", multiple="stack")
+plt.title("KDE Plot of Monthly Income by Gender")
+plt.show()
+
+#REG PLOT -- Regression Plot#
 sns.regplot(x="Total_Working_Years", y="Monthly_Income", data=dat)
 plt.title("Regression Plot of Total Working Years and Monthly Income")
 plt.show()
 
-#Pairplot# #It takes more than 2 minute to load the output because there are many columns in the dataset#
+#REL PLOT --- Relation Plot#
+g = sns.relplot(data=dat, x="Age", y="Monthly_Income", hue="Department")
+g.ax.axline(xy1=(25, 3000), slope=100, color="b", dashes=(5, 2))
+plt.title("Relational Plot of Monthly Income vs Age with Department Hue")
+plt.show()
+
+#REL PLOT#
+g = sns.relplot(data=dat, x="Total_Working_Years", y="Monthly_Income")
+g.ax.axline(xy1=(5, 2000), slope=500, color="b", dashes=(5, 2))
+plt.title("Relational Plot of Monthly Income vs Total Working Years")
+plt.show()
+
+#LM PLOT#
+sns.lmplot(x="Total_Working_Years", y="Monthly_Income", hue="Gender", data=dat)
+plt.title("Linear Regression Plot of Monthly Income vs Total Working Years")
+plt.show()
+
+#PAIR PLOT-----Being many columns it takes more than 2 min to load the pair plot#
 sns.pairplot(dat, hue='Marital_Status')
 plt.show()
 
@@ -88,6 +123,7 @@ g = sns.FacetGrid(dat, col="Marital_Status", row="Gender")
 g.map(sns.scatterplot, "Monthly_Income", "Age")
 plt.figure(figsize=(20, 40)) 
 plt.show()
+
 
 
 
