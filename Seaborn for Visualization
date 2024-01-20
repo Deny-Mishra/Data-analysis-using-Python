@@ -1,0 +1,93 @@
+import matplotlib.pyplot as plt
+import seaborn as sns
+import numpy as np
+import pandas as pd
+
+#laoding data#
+data_path = 'C:/Deny/Python/beninning/data/HR_dataa.csv'
+dataa=pd.read_csv(data_path)
+
+#viewing dataset#
+dataa
+
+#selecting columns out of all the columns#
+dat = dataa[[ 'CF_age_band', 'Department', 'Education_Field', 'Gender',
+       'Job_Role', 'Marital_Status', 'Over_Time', 
+      'Age', 'Daily_Rate', 'Hourly_Rate', 'Education','Environment_Satisfaction',  
+       'Job_Level', 'Job_Satisfaction', 'Monthly_Income', 'Monthly_Rate',
+       'Num_Companies_Worked', 'Percent_Salary_Hike', 'Performance_Rating',
+      'Standard_Hours', 'Total_Working_Years', 'Work_Life_Balance', 'Years_A_ Company',
+       'Years_In_Current_Role', 'Years_Since_Last_Promotion',
+       'Years_With_Curr_Manager']]
+
+#Droping NA if any#
+dat = dat.dropna()
+dat
+
+#checking null#
+print(dat.isnull().sum())
+
+#checking data types#
+dat.dtypes
+
+
+# COUNTPLOT#
+sns.countplot(x="Marital_Status", data=dat)
+plt.title("Count of Occurrences by Marital Status")
+plt.show()
+
+# HISTOGRAM#
+sns.histplot(dat['Age'], bins=20, kde=True)
+plt.title("Distribution of Age")
+plt.show()
+
+# POINTPLOT#
+sns.pointplot(x="Department", y="Monthly_Income", data=dat, capsize=0.2)
+plt.title("Point Plot of Monthly Income by Department")
+plt.show()
+
+#JOINT PLOT#
+sns.jointplot(x="Age", y="Monthly_Income", data=dat, kind="scatter")
+plt.suptitle("Joint Plot of Age and Monthly Income")
+plt.show()
+
+#SCATTERPLOT#
+# Assuming 'dat' is your DataFrame
+sns.scatterplot(x='Age', y='Monthly_Rate', data=dat)
+plt.title("Scatter Plot of Job Satisfaction vs Monthly Rate")
+plt.show()
+
+#RUG PLOT--- NOTE--- In this situation we have to declare the height of rug plot#
+sns.rugplot(dat['Monthly_Income'], height=0.5)
+plt.title("Rug Plot of Monthly Income")
+plt.show()
+
+#RegPLOT -----Regression PLOT#
+sns.regplot(x="Total_Working_Years", y="Monthly_Income", data=dat)
+plt.title("Regression Plot of Total Working Years and Monthly Income")
+plt.show()
+
+#Pairplot# #It takes more than 2 minute to load the output because there are many columns in the dataset#
+sns.pairplot(dat, hue='Marital_Status')
+plt.show()
+
+
+#BOX PLOT#
+sns.boxplot(x="Department", y="Monthly_Income", data=dat)
+plt.title("Box Plot of Monthly Income by Department")
+plt.show()
+
+#VIOLIN PLOT#
+sns.violinplot(x="Marital_Status", y="Monthly_Income", data=dat, hue="Gender", split=True)
+plt.title("Violin Plot of Monthly Income by Marital Status and Gender")
+plt.show()
+
+#FACET GRID#
+# Assuming 'dat' is your DataFrame
+g = sns.FacetGrid(dat, col="Marital_Status", row="Gender")
+g.map(sns.scatterplot, "Monthly_Income", "Age")
+plt.figure(figsize=(20, 40)) 
+plt.show()
+
+
+
